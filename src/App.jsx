@@ -1,3 +1,4 @@
+import * as React from 'react';
 
 function App() {
   const stories = [
@@ -19,11 +20,15 @@ function App() {
     },
   ];
 
+  const handleSearch = (event) => {
+    console.log(event.target.value);
+  }
+
   return (
     <div>
       <h1>My Hacker Stories</h1>
 
-      <Search />
+      <Search onSearch={handleSearch} />
       <hr />
       <List list={stories} />
     </div>
@@ -49,19 +54,23 @@ const Item = ({ item }) => (
   </li>
 )
 
-const Search = () => {
+const Search = ({ onSearch }) => {
+
+  const [searchTerm, setSearchTerm] = React.useState('');
 
   const handleChange = (event) => {
-    // synthetic event
-    console.log(event);
-    // value of target (here: input HTML element)
-    console.log(event.target.value);
+    setSearchTerm(event.target.value);
+    onSearch(event);
   }
 
   return (
     <div>
       <label htmlFor="search">Search: </label>
       <input id="search" type="text" onChange={handleChange} />
+
+      <p>
+        Searching for <strong>{searchTerm}</strong>.
+      </p>
     </div>
   );
 }

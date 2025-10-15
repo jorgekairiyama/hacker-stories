@@ -25,7 +25,40 @@ const getAsyncStories = () =>
       () => resolve({ data: { stories: initialStories } }),
       2000
     )
-  )
+  );
+
+const storiesReducer = (state, action) => {
+  switch (action.type) {
+    case 'STORIES_FETCH_INIT':
+      return {
+        ...state,
+        isLoading: true,
+        isError: false,
+      };
+    case 'STORIES_FETCH_SUCCESS':
+      return {
+        ...state,
+        isLoading: false,
+        isError: false,
+        data: action.payload,
+      };
+    case 'STORIES_FETCH_FAILURE':
+      return {
+        ...state,
+        isLoading: false,
+        isError: true,
+      };
+    case 'REMOVE_STORY':
+      return {
+        ...state,
+        data: state.data.filter(
+          (story) => action.payload.objectID !== story.objectID
+        ),
+      };
+    default:
+      throw new Error();
+  }
+};
 
 const useStorageState = (key, initialState) => {
   const [value, setValue] = React.useState(
@@ -44,24 +77,31 @@ const App = () => {
 
   const [searchTerm, setSearchTerm] = useStorageState('search', 'React');
 
-  const [stories, setStories] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(false);
   const [isError, setIsError] = React.useState(false);
 
+  const [stories, dispatchStories] = React.useReducer(
+    storiesReducer,
+    { data: [], isLoading: false, isError: false }
+  )
   React.useEffect(() => {
-    setIsLoading(true);
+    dispatchStories({ type: 'STORIES_FETCH_INIT' });
+
     getAsyncStories().then(result => {
-      setStories(result.data.stories);
+      dispatchStories({
+        type: 'STORIES_FETCH_SUCCESS',
+        payload: result.data.stories,
+      });
       setIsLoading(false);
     })
-      .catch(() => setIsError(true));
+      .catch(() => dispatchStories({ type: 'STORIES_FETCH_FAILURE' }));
   }, []);
 
   const handleRemoveStory = (item) => {
-    const newStories = stories.filter(
-      (story) => item.objectID !== story.objectID
-    );
-    setStories(newStories);
+    dispatchStories({
+      type: 'REMOVE_STORY',
+      payload: item,
+    });
   }
 
   React.useEffect(() => { localStorage.setItem('search', searchTerm); }, [searchTerm]);

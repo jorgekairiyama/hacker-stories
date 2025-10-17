@@ -77,9 +77,6 @@ const App = () => {
 
   const [searchTerm, setSearchTerm] = useStorageState('search', 'React');
 
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [isError, setIsError] = React.useState(false);
-
   const [stories, dispatchStories] = React.useReducer(
     storiesReducer,
     { data: [], isLoading: false, isError: false }
@@ -92,7 +89,6 @@ const App = () => {
         type: 'STORIES_FETCH_SUCCESS',
         payload: result.data.stories,
       });
-      setIsLoading(false);
     })
       .catch(() => dispatchStories({ type: 'STORIES_FETCH_FAILURE' }));
   }, []);
@@ -110,9 +106,9 @@ const App = () => {
     setSearchTerm(event.target.value);
   }
 
-  const searchedStories = stories.filter(function (story) {
-    return story.title.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  const searchedStories = stories.data.filter((story) =>
+    story.title.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
 
   return (
@@ -126,9 +122,9 @@ const App = () => {
         onInputChange={handleSearch}
       />
       <hr />
-      {isError && <p>Something went wrong ...</p>}
+      {stories.isError && <p>Something went wrong ...</p>}
 
-      {isLoading ? (
+      {stories.isLoading ? (
         <p>Loading ...</p>
       ) : (
         <List

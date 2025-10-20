@@ -52,6 +52,10 @@ const App = () => {
 
   const [searchTerm, setSearchTerm] = useStorageState('search', 'React');
 
+  const [url, setUrl] = React.useState(
+    `${API_ENDPOINT}${searchTerm}`
+  )
+
   const [stories, dispatchStories] = React.useReducer(
     storiesReducer,
     { data: [], isLoading: false, isError: false }
@@ -63,7 +67,7 @@ const App = () => {
 
     dispatchStories({ type: 'STORIES_FETCH_INIT' });
 
-    fetch(`${API_ENDPOINT}${searchTerm}`) // B
+    fetch(url) // B
       .then((response) => response.json())
       .then(result => {
         dispatchStories({
@@ -72,7 +76,7 @@ const App = () => {
         });
       })
       .catch(() => dispatchStories({ type: 'STORIES_FETCH_FAILURE' }));
-  }, [searchTerm]); // E
+  }, [url]); // E
 
   React.useEffect(() => {
     handleFetchStories(); // C
@@ -87,13 +91,17 @@ const App = () => {
 
   React.useEffect(() => { localStorage.setItem('search', searchTerm); }, [searchTerm]);
 
-  const handleSearch = (event) => {
+  const handleSearchInput = (event) => {
     setSearchTerm(event.target.value);
-  }
+  };
+
+  const handleSearchSubmit = () => {
+    setUrl(`${API_ENDPOINT}${searchTerm}`);
+  };
 
   const searchedStories = stories.data.filter((story) =>
     (story.title) && story.title.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  );
 
 
   return (
@@ -104,8 +112,19 @@ const App = () => {
         id="search"
         label="Search"
         value={searchTerm}
-        onInputChange={handleSearch}
-      />
+        onInputChange={handleSearchInput}
+      >
+        <strong>Search:</strong>
+      </InputWithLabel>
+      <button
+        type="button"
+        disabled={!searchTerm}
+        onClick={handleSearchSubmit}
+        Fetch Stories
+      >
+        Submit
+      </button>
+
       <hr />
       {stories.isError && <p>Something went wrong ...</p>}
 
